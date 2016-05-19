@@ -17,10 +17,10 @@ import java.util.ArrayList;
 
 // K: For what it's doing, this should really be called something along the lines of 'EnemyManager'
 
-public class EnemySpawner implements Entity{
+public class EnemySpawner implements Entity {
 	World world;
 	Vector2 position;
-	public ArrayList<FastEnemy> fastEnemies;
+	ArrayList<FastEnemy> fastEnemies;
 	int spawnTimer;
 	int maxEnemies;
 	Player player;
@@ -47,7 +47,7 @@ public class EnemySpawner implements Entity{
 	}
 
 	public void update() {
-		float playerDist = player.body.getPosition().dst(position);
+		float playerDist = player.getPosition().dst(position);
 		//only if the player enters within the region of radius 500 from the spawner block
 		//then the enemies will spawn.
 		spawnTimer++;

@@ -61,7 +61,7 @@ public class ScreenMain implements Screen, InputProcessor {
 			@Override
 			public void beginContact(Contact contact) {
 				// K: Sensor code must be here!!
-				// Sensor collisions don't get called in postSolve
+				// Sensor collisions aren't honoured in postSolve
 				Fixture fixtureA = contact.getFixtureA();
 				Fixture fixtureB = contact.getFixtureB();
 

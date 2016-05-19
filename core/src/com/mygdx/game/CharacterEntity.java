@@ -19,11 +19,13 @@ import com.badlogic.gdx.physics.box2d.World;
 public abstract class CharacterEntity implements Entity {
 	Body body;
 	Fixture fixture, footSensor;
-	Animation aniIdle, aniMove;
+	private Animation aniIdle, aniMove;
 	boolean bRight;    // If the character is facing right, facing left otherwise
 	boolean isIdle;    // If the character isn't moving (play idle animation)
-	boolean isGrounded; // If the character is on the ground
-	float animationTime;
+
+	// TODO: Find a way to figure out we're on the ground internally
+	/*private*/ boolean isGrounded; // If the character is on the ground
+	private float animationTime;
 
 	CharacterEntity(World world, Vector2 position, String animationName) {
 		animationTime = 0f;
@@ -37,7 +39,7 @@ public abstract class CharacterEntity implements Entity {
 		createFootSensor();
 	}
 
-	// Let implementing clases define 'update' for thinking and movement
+	// Let extending clases define 'update' for thinking and movement
 
 	public void draw(SpriteBatch spriteBatch) {
 		// drawing sprite on main body using default library, not using animatedbox2dsprite because it doesn't loop the animation
@@ -69,6 +71,10 @@ public abstract class CharacterEntity implements Entity {
 
 	public void stop() {
 		body.setLinearVelocity(0f, body.getLinearVelocity().y);
+	}
+
+	public Vector2 getPosition() {
+		return body.getPosition();
 	}
 
 	private void getAnimations(String animationName) {
