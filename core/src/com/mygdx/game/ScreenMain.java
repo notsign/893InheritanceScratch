@@ -147,7 +147,7 @@ public class ScreenMain implements Screen {
 	private void initializeEnemySpawner() {
 		Vector2[] arEnemySpawnPoints = map.getEnemySpawnPoints();
 		for (int i = 0; i < arEnemySpawnPoints.length; i++) {
-			entityList.add(new EnemySpawner(world, entityBuffer, player, arEnemySpawnPoints[i], 5));
+			//entityList.add(new EnemySpawner(world, entityBuffer, player, arEnemySpawnPoints[i], 5));
 		}
 
 	}

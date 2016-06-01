@@ -107,8 +107,8 @@ public abstract class CharacterEntity implements Entity {
 	}
 
 	private void createFixture() {
-		int width = aniIdle.getKeyFrame(0f).getRegionWidth() / 2;
-		int height = aniIdle.getKeyFrame(0f).getRegionHeight() / 2;
+		int width = (int)(aniIdle.getKeyFrame(0f).getRegionWidth() / 2f);
+		int height = (int)(aniIdle.getKeyFrame(0f).getRegionHeight() / 2f);
 
 		PolygonShape shape = new PolygonShape();
 		FixtureDef fixtureDef = new FixtureDef();

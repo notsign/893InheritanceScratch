@@ -69,9 +69,9 @@ public class Bullet implements Entity {
 
 	private void setVelocity(boolean facingRight) {
 		if (facingRight) {
-			body.setLinearVelocity(500000, 0);
+			body.setLinearVelocity(60, 0);
 		} else {
-			body.setLinearVelocity(-500000, 0);
+			body.setLinearVelocity(-60, 0);
 		}
 	}
 
