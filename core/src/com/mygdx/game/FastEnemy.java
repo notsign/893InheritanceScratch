@@ -18,7 +18,6 @@ public class FastEnemy extends CharacterEntity {
 
 		this.player = player;
 
-        body.setUserData("fast_enemy");
 		isAlive = true;
 
 		Filter filter = new Filter();
@@ -29,15 +28,6 @@ public class FastEnemy extends CharacterEntity {
     }
 
     public void update() {
-		// Causes enemies to jump all the time, not worth fixing as Don will update with his enemy
-		// AI soon.
-        //if (Math.abs(body.getLinearVelocity().x) < 0.1f) {
-        //    jump();
-        //    isIdle = true;
-        //}
-
-
-
         if (player.body.getPosition().x < body.getPosition().x) {
             body.setLinearVelocity(-50f, body.getLinearVelocity().y);
             bRight = false;
@@ -48,4 +38,12 @@ public class FastEnemy extends CharacterEntity {
             isIdle = false;
         }
     }
+
+	public boolean shouldBeDestroyed(){
+		return !isAlive;
+	}
+
+	public EntityType getEntityType(){
+		return EntityType.FAST_ENEMY;
+	}
 }

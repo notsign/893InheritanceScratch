@@ -12,6 +12,7 @@ import com.badlogic.gdx.maps.tiled.TiledMapRenderer;
 import com.badlogic.gdx.maps.tiled.renderers.OrthogonalTiledMapRenderer;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.physics.box2d.Body;
 import com.badlogic.gdx.physics.box2d.Box2DDebugRenderer;
 import com.badlogic.gdx.physics.box2d.Contact;
 import com.badlogic.gdx.physics.box2d.ContactImpulse;
@@ -28,25 +29,28 @@ import java.util.List;
  * Created by k9sty on 2016-03-12.
  */
 
-public class ScreenMain implements Screen, InputProcessor {
+public class ScreenMain implements Screen {
 	Game game;
 	World world;
 	Map map;
 	OrthographicCamera camera;
 	Box2DDebugRenderer debugRenderer;
 	TiledMapRenderer tiledMapRenderer;
-	Player player;
 	SpriteBatch spriteBatch;
-	EnemySpawner[] arSpawner;
-	List<Bullet> bullets;
 
-	// TODO: Generic Entity arraylist used to 'update' and 'draw' all entities
+	Player player; // Keep our player for it to be passed to enemies
+	List<Entity> entityList;
+	List<Entity> entityBuffer; // For entities to request addition of entities into the main list while being updated
+
+	// TODO: Generic Entity arraylist used to 'update' and 'render' all entities easier
 
 	ScreenMain(Game game) {
 		this.game = game;
 
 		spriteBatch = new SpriteBatch();
-		bullets = new ArrayList<Bullet>();
+
+		entityList = new ArrayList<Entity>();
+		entityBuffer = new ArrayList<Entity>();
 
 		initializeWorld();
 		initializeCamera();
@@ -58,6 +62,8 @@ public class ScreenMain implements Screen, InputProcessor {
 		world = new World(new Vector2(0f, -200f), true);
 		// create contact listener in the class itself so i don't need to turn every variable into a static when i call it
 		world.setContactListener(new ContactListener() {
+
+			// TODO: Bullets collide with player footsensor occasionally when jumping, which causes the player to jump extra high
 			@Override
 			public void beginContact(Contact contact) {
 				// K: Sensor code must be here!!
@@ -97,30 +103,24 @@ public class ScreenMain implements Screen, InputProcessor {
 
 			@Override
 			public void postSolve(Contact contact, ContactImpulse impulse) {
-				Fixture fa = contact.getFixtureA();
-				Fixture fb = contact.getFixtureB();
+				Object udata1 = contact.getFixtureA().getUserData();
+				Object udata2 = contact.getFixtureB().getUserData();
 
-				Fixture enemyFixture = (fa.getFilterData().groupIndex == -2) ? fa : (fb.getFilterData().groupIndex == -2) ? fb : null;
-				Fixture bulletFixture = (fa.getFilterData().groupIndex == -1) ? fa : (fb.getFilterData().groupIndex == -1) ? fb : null;
+				// We set userdata to the this pointer in these classes
+				Bullet bullet = (udata1 instanceof Bullet) ? (Bullet)udata1
+						: (udata2 instanceof Bullet) ? (Bullet)udata2
+						: null;
 
-				if (enemyFixture != null && bulletFixture != null) { // An enemy and a bullet collided
-					// Find the enemy that owns this fixture
-					for (FastEnemy fastEnemy : arSpawner[0].fastEnemies) {
-						if (fastEnemy.body.equals(enemyFixture.getBody())) {
-							fastEnemy.isAlive = false;
-							break;
-						}
-					}
+				FastEnemy enemy = (udata1 instanceof FastEnemy) ? (FastEnemy)udata1
+						: (udata2 instanceof FastEnemy) ? (FastEnemy)udata2
+						: null;
+
+				if (enemy != null && bullet != null && !bullet.hasContacted) { // Enemy colliding with bullet
+					enemy.isAlive = false;
 				}
 
-				if (bulletFixture != null) { // A bullet hit something
-					// Find the bullet that owns the fixture
-					for (Bullet bullet : bullets) {
-						if (bullet.body.equals(bulletFixture.getBody())) {
-							bullet.hasContacted = true;
-							break;
-						}
-					}
+				if (bullet != null) {
+					bullet.hasContacted = true;
 				}
 			}
 		});
@@ -140,38 +140,36 @@ public class ScreenMain implements Screen, InputProcessor {
 	}
 
 	private void initializePlayer() {
-		player = new Player(world, map.getPlayerSpawnPoint());
+		player = new Player(world, map.getPlayerSpawnPoint(), entityBuffer);
+		entityList.add(player);
 	}
 
 	private void initializeEnemySpawner() {
 		Vector2[] arEnemySpawnPoints = map.getEnemySpawnPoints();
-		arSpawner = new EnemySpawner[map.nSpawners];
-		for (int i = 0; i < arSpawner.length; i++) {
-			arSpawner[i] = new EnemySpawner(world, player, arEnemySpawnPoints[i], 5);
+		for (int i = 0; i < arEnemySpawnPoints.length; i++) {
+			entityList.add(new EnemySpawner(world, entityBuffer, player, arEnemySpawnPoints[i], 5));
 		}
 
 	}
 
 	@Override
 	public void show() {
-		Gdx.input.setInputProcessor(this);
+
 	}
 
 	@Override
 	public void render(float delta) {
-		// Update all our stuff before rendering
-		player.bulletCooldown--;
-		player.update();
+		// Let our entities update before updating the world
+		for (Entity entity : entityList) {
+			entity.update();
+		}
 
-		for (EnemySpawner enemySpawner: arSpawner)
-			enemySpawner.update();
-
-		world.step(1 / 60f, 6, 2); // Update our world
+		world.step(1f / 60f, 6, 2); // Update our world
 
 		clean(); // Remove dead enemies and collided bullets
 
 		camera.position.set(new Vector3(player.body.getPosition().x, player.body.getPosition().y, 0f)); // Center the screen on the player
-		camera.update(); // Lol idk
+		camera.update();
 
 		// Rendering things...
 		Gdx.gl.glClearColor(0, 0, 0, 1);
@@ -185,34 +183,36 @@ public class ScreenMain implements Screen, InputProcessor {
 		// set the projection matrix as the camera so the tile layer on the map lines up with the bodies
 		// if this line wasn't here it wouldn't scale down
 		spriteBatch.begin();
-		player.draw(spriteBatch);
-		for(EnemySpawner enemySpawner : arSpawner)
-			enemySpawner.draw(spriteBatch);
+
+		for (Entity entity : entityList) {
+			entity.render(spriteBatch);
+		}
 
 		spriteBatch.end();
+
+		Iterator<Entity> entityBufferIterator = entityBuffer.iterator();
+		while(entityBufferIterator.hasNext()) {
+			Entity entity = entityBufferIterator.next();
+
+			entityList.add(entity);
+
+			entityBufferIterator.remove(); // We gave the reference to the main list, we don't need it anymore
+		}
+
 	}
 
 	private void clean() {
 		// We have to remove stuff here instead of in the contact listener because it will crash
-		// because (my guess) of a ConcurrentModificationException.
+		// because of (my guess) a ConcurrentModificationException.
 
-		Iterator<Bullet> bulletIterator = bullets.iterator();
-		while (bulletIterator.hasNext()) {
-			Bullet b = bulletIterator.next();
-			if (b.hasContacted) {
-				world.destroyBody(b.body);
-				bulletIterator.remove();
-			}
-		}
+		Iterator<Entity> entityIterator = entityList.iterator();
+		while (entityIterator.hasNext()) {
+			Entity entity = entityIterator.next();
 
-		for (EnemySpawner enemySpawner : arSpawner) {
-			Iterator<FastEnemy> enemyIterator = enemySpawner.fastEnemies.iterator();
-			while (enemyIterator.hasNext()) {
-				FastEnemy enemy = enemyIterator.next();
-				if (!enemy.isAlive) {
-					world.destroyBody(enemy.body);
-					enemyIterator.remove();
-				}
+			// If the entity reports that it should be destroyed, grant its wish
+			if (entity.shouldBeDestroyed()) {
+				entity.destroy();
+				entityIterator.remove();
 			}
 		}
 	}
@@ -240,51 +240,5 @@ public class ScreenMain implements Screen, InputProcessor {
 	@Override
 	public void dispose() {
 
-	}
-
-
-	@Override
-	public boolean keyDown(int keycode) {
-		// TODO: Should this be moved to player class as well?
-		if (keycode == Input.Keys.X && player.bulletCooldown <= 0) {
-			bullets.add(new Bullet(world, player.body.getPosition(), player.bRight));
-			player.bulletCooldown = 30;
-		}
-		return false;
-	}
-
-	@Override
-	public boolean keyUp(int keycode) {
-		return false;
-	}
-
-	@Override
-	public boolean keyTyped(char character) {
-		return false;
-	}
-
-	@Override
-	public boolean touchDown(int screenX, int screenY, int pointer, int button) {
-		return false;
-	}
-
-	@Override
-	public boolean touchUp(int screenX, int screenY, int pointer, int button) {
-		return false;
-	}
-
-	@Override
-	public boolean touchDragged(int screenX, int screenY, int pointer) {
-		return false;
-	}
-
-	@Override
-	public boolean mouseMoved(int screenX, int screenY) {
-		return false;
-	}
-
-	@Override
-	public boolean scrolled(int amount) {
-		return false;
 	}
 }

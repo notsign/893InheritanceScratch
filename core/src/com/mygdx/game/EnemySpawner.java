@@ -10,6 +10,8 @@ import com.badlogic.gdx.physics.box2d.PolygonShape;
 import com.badlogic.gdx.physics.box2d.World;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Created by Rueban Rasaselvan on 03/04/2016.
@@ -20,48 +22,56 @@ import java.util.ArrayList;
 public class EnemySpawner implements Entity {
 	World world;
 	Vector2 position;
-	ArrayList<FastEnemy> fastEnemies;
+	List<Entity> entityBuffer; // Reference to the main entityList
 	int spawnTimer;
 	int maxEnemies;
 	Player player;
 
-	EnemySpawner(World world, Player player, Vector2 position, int maxEnemies) {
+	EnemySpawner(World world, List<Entity> entityBuffer, Player player, Vector2 position, int maxEnemies) {
 		this.world = world;
+		this.entityBuffer = entityBuffer;
 		this.player = player;
 		this.position = position;
 		this.maxEnemies = maxEnemies;
 		spawnTimer = 0;
-
-		fastEnemies = new ArrayList<FastEnemy>();
 	}
 
 	void createEnemy() {
-		fastEnemies.add(new FastEnemy(world, player, position));
+		entityBuffer.add(new FastEnemy(world, player, position));
 	}
 
-	public void draw(SpriteBatch spriteBatch) {
-		//only the enemies that have already been spawned in are updated
-		for (FastEnemy fastEnemy : fastEnemies) {
-			fastEnemy.draw(spriteBatch);
-		}
+	public void render(SpriteBatch spriteBatch) {
+
 	}
 
 	public void update() {
-		float playerDist = player.getPosition().dst(position);
+		float playerDist = position.dst(player.getPosition());
 		//only if the player enters within the region of radius 500 from the spawner block
 		//then the enemies will spawn.
 		spawnTimer++;
-		if (playerDist <= 500f && fastEnemies.size() < maxEnemies) {
+		if (playerDist <= 500f) {
 			//every 5 seconds a new enemy is spawned
 			if (spawnTimer >= 60) {
 				spawnTimer = 0;
 				createEnemy();
 			}
 		}
+	}
 
-		for (FastEnemy fastEnemy : fastEnemies) {
-			fastEnemy.update();
-		}
+	public boolean shouldBeDestroyed(){
+		return false; //lol
+	}
+
+	public void destroy(){
+		//lol
+	}
+
+	public Body getBody(){
+		return null;
+	}
+
+	public EntityType getEntityType() {
+		return EntityType.ENEMY_SPAWNER;
 	}
 }
 

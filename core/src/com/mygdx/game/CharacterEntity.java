@@ -17,6 +17,7 @@ import com.badlogic.gdx.physics.box2d.World;
  * Created by Kevin on 16/05/2016.
  */
 public abstract class CharacterEntity implements Entity {
+	World world;
 	Body body;
 	Fixture fixture, footSensor;
 	private Animation aniIdle, aniMove;
@@ -28,20 +29,24 @@ public abstract class CharacterEntity implements Entity {
 	private float animationTime;
 
 	CharacterEntity(World world, Vector2 position, String animationName) {
+		this.world = world;
+
+		getAnimations(animationName);
+		createBody(position);
+		createFixture();
+		createFootSensor();
+
 		animationTime = 0f;
 		bRight = true;
 		isIdle = true;
 		isGrounded = false;
-
-		getAnimations(animationName);
-		createBody(world, position);
-		createFixture();
-		createFootSensor();
 	}
 
-	// Let extending clases define 'update' for thinking and movement
+	// Extending classes must implement:
+	// - update // for tick logic
+	// - shouldBeDestroyed
 
-	public void draw(SpriteBatch spriteBatch) {
+	public void render(SpriteBatch spriteBatch) {
 		// drawing sprite on main body using default library, not using animatedbox2dsprite because it doesn't loop the animation
 		animationTime++;
 		float x = body.getPosition().x;
@@ -65,6 +70,14 @@ public abstract class CharacterEntity implements Entity {
 			spriteBatch.draw(textureRegion, x + (width / 2f), y - (height / 2f), -width, height);
 	}
 
+	public void destroy(){
+		world.destroyBody(body);
+	}
+
+	public Body getBody(){
+		return body;
+	}
+
 	public void jump(float jumpVelocity) {
 		body.setLinearVelocity(body.getLinearVelocity().x, jumpVelocity);
 	}
@@ -85,7 +98,7 @@ public abstract class CharacterEntity implements Entity {
 		aniMove = new Animation(taRun.getRegions().size, taRun.getRegions());
 	}
 
-	private void createBody(World world, Vector2 position) {
+	private void createBody(Vector2 position) {
 		BodyDef bodyDef = new BodyDef();
 		bodyDef.position.set(new Vector2(position.x / 2f, position.y / 2f));
 		bodyDef.type = BodyDef.BodyType.DynamicBody;
@@ -103,6 +116,8 @@ public abstract class CharacterEntity implements Entity {
 		fixtureDef.shape = shape;
 
 		fixture = body.createFixture(fixtureDef);
+
+		fixture.setUserData(this);
 	}
 
 	private void createFootSensor() {
@@ -117,5 +132,6 @@ public abstract class CharacterEntity implements Entity {
 		fixtureDef.isSensor = true;
 
 		footSensor = body.createFixture(fixtureDef);
+		footSensor.setUserData(this);
 	}
 }

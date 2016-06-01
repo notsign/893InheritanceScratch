@@ -6,6 +6,9 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.physics.box2d.Filter;
 import com.badlogic.gdx.physics.box2d.World;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by k9sty on 2016-03-12.
  */
@@ -14,14 +17,15 @@ public class Player extends CharacterEntity {
 	final static int MAX_HEALTH = 3;
 	int health;
 	int bulletCooldown;
+	List<Entity> entityBuffer;
 
-	Player(World world, Vector2 position) {
+	Player(World world, Vector2 position, List<Entity> entityBuffer) {
 		super(world, position, "player");
+
+		this.entityBuffer = entityBuffer;
 
 		health = MAX_HEALTH;
 		bulletCooldown = 0;
-
-		body.setUserData("player");
 
 		Filter filter = new Filter();
 		filter.categoryBits = 2;
@@ -30,8 +34,6 @@ public class Player extends CharacterEntity {
 	}
 
 	public void update() {
-		// TODO: Clean up input handling code
-
 		if (Gdx.input.isTouched()) {
 			int screenHeight = Gdx.graphics.getHeight();
 			int screenWidth = Gdx.graphics.getWidth();
@@ -60,6 +62,13 @@ public class Player extends CharacterEntity {
 		if (isGrounded && Gdx.input.isKeyPressed(Input.Keys.Z))
 			jump();
 
+		if (bulletCooldown <= 0 && Gdx.input.isKeyPressed(Input.Keys.X)) {
+			entityBuffer.add(new Bullet(world, this, body.getPosition(), bRight));
+			bulletCooldown = 30; // 1/2 second cooldown
+		} else {
+			bulletCooldown--;
+		}
+
 		if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
 			bRight = false;
 			isIdle = false;
@@ -73,12 +82,15 @@ public class Player extends CharacterEntity {
 		}
 	}
 
+	public boolean shouldBeDestroyed(){
+		return health <= 0;
+	}
+
+	public EntityType getEntityType() {
+		return EntityType.PLAYER;
+	}
+
 	public void jump(){
 		jump(500f);
 	}
-
-	Vector2 getLinearVelocity() {
-		return body.getLinearVelocity();
-	}
-
 }

@@ -1,6 +1,7 @@
 package com.mygdx.game;
 
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.physics.box2d.Body;
 
 /**
  * Created by Kevin on 16/05/2016.
@@ -12,6 +13,21 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 // Draw is for simply drawing the object
 
 public interface Entity {
+	enum EntityType {
+		UNKNOWN,
+		PLAYER,
+		BULLET,
+		FAST_ENEMY,
+		ENEMY_SPAWNER,
+	}
+
 	void update();
-	void draw(SpriteBatch spriteBatch);
+	void render(SpriteBatch spriteBatch);
+
+	boolean shouldBeDestroyed();
+	void destroy();
+
+	EntityType getEntityType();
+
+	Body getBody(); // Can be null if the implementing class doesn't have one
 }
