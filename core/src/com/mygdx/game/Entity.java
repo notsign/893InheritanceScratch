@@ -13,21 +13,11 @@ import com.badlogic.gdx.physics.box2d.Body;
 // Draw is for simply drawing the object
 
 public interface Entity {
-	enum EntityType {
-		UNKNOWN,
-		PLAYER,
-		BULLET,
-		FAST_ENEMY,
-		ENEMY_SPAWNER,
-	}
-
 	void update();
 	void render(SpriteBatch spriteBatch);
 
 	boolean shouldBeDestroyed();
 	void destroy();
-
-	EntityType getEntityType();
 
 	Body getBody(); // Can be null if the implementing class doesn't have one
 }
