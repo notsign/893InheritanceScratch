@@ -98,10 +98,6 @@ public class Player extends CharacterEntity {
 		return health <= 0;
 	}
 
-	public EntityType getEntityType() {
-		return EntityType.PLAYER;
-	}
-
 	public void jump() {
 		jump(500f);
 	}

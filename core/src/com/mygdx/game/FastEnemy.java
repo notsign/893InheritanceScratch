@@ -46,8 +46,4 @@ public class FastEnemy extends CharacterEntity {
 	public boolean shouldBeDestroyed(){
 		return !isAlive;
 	}
-
-	public EntityType getEntityType(){
-		return EntityType.FAST_ENEMY;
-	}
 }

@@ -94,8 +94,4 @@ public class Bullet implements Entity {
 	public void destroy(){
 		world.destroyBody(body);
 	}
-
-	public EntityType getEntityType() {
-		return EntityType.BULLET;
-	}
 }

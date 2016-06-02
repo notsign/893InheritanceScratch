@@ -69,10 +69,6 @@ public class EnemySpawner implements Entity {
 	public Body getBody(){
 		return null;
 	}
-
-	public EntityType getEntityType() {
-		return EntityType.ENEMY_SPAWNER;
-	}
 }
 
 
