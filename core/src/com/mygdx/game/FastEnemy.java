@@ -23,8 +23,12 @@ public class FastEnemy extends CharacterEntity {
 		Filter filter = new Filter();
 		filter.categoryBits = 8;
 		filter.groupIndex = -2;
-		filter.maskBits = 1 | 2 | 4; // Ground, player and bullets
+		filter.maskBits = 1 | 2 | 4; // Collide with terrain, player and bullets
 		fixture.setFilterData(filter);
+
+		Filter footSensorFilter = new Filter();
+		filter.maskBits = 1 | 2; // Jump off terrain and player
+		footSensor.setFilterData(footSensorFilter);
     }
 
     public void update() {

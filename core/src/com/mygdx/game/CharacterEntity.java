@@ -131,6 +131,9 @@ public abstract class CharacterEntity implements Entity {
 		fixtureDef.shape = shape;
 		fixtureDef.isSensor = true;
 
+		// Only jump off ground by default
+		fixtureDef.filter.maskBits = 1;
+
 		footSensor = body.createFixture(fixtureDef);
 		footSensor.setUserData(this);
 	}
